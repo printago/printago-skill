@@ -1,0 +1,37 @@
+{
+  "name": "printago-skill",
+  "owner": {
+    "name": "printago",
+    "email": "support@printago.io"
+  },
+  "metadata": {
+    "description": "Printago 3D print farm automation skill for Claude Code",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "printago-skill",
+      "source": "./",
+      "description": "Claude Code Skill for interacting with the Printago 3D printing management API. Manage parts, printers, print jobs, materials, SKUs, builds, orders, and profiles.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Printago"
+      },
+      "homepage": "https://printago.io",
+      "repository": "https://github.com/printago/printago-skill",
+      "license": "MIT",
+      "keywords": [
+        "claude-skill",
+        "claude-code",
+        "printago",
+        "3d-printing",
+        "print-farm",
+        "api",
+        "automation",
+        "model-invoked"
+      ],
+      "category": "automation",
+      "tags": ["3d-printing", "automation", "api", "print-farm", "manufacturing"]
+    }
+  ]
+}

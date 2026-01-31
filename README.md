@@ -6,9 +6,14 @@ A Claude Code plugin for interacting with the [Printago](https://printago.io) 3D
 
 ### Via Plugin System (Recommended)
 
+Install via Claude Code's plugin system for automatic updates and team distribution:
+
 ```bash
-claude /plugin install printago
+/plugin marketplace add printago/printago-skill
+/plugin install printago-skill@printago-skill
 ```
+
+Verify installation by running `/help` to confirm the skill is available.
 
 ### Manual Installation
 
