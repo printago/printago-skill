@@ -6,10 +6,7 @@
     "name": "Printago",
     "url": "https://printago.io"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/printago/printago-skill"
-  },
+  "repository": "https://github.com/printago/printago-skill",
   "homepage": "https://printago.io",
   "license": "MIT",
   "keywords": [
