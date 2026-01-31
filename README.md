@@ -26,7 +26,7 @@ Or extract `skills/printago/` to `~/.claude/skills/` for standalone use.
 ### 1. Get API Credentials
 
 1. Log in to [Printago](https://app.printago.io)
-2. Go to Settings > API Keys
+2. Go to Addons > API Access
 3. Create a new API key and note your Store ID
 
 ### 2. Store Credentials
@@ -69,7 +69,7 @@ Once installed, Claude will automatically use the Printago skill when relevant. 
 ### Example Prompts
 
 - Upload benchy.stl, name it 'Tugboat', create a SKU with 2 copies, and print it in PLA Basic Blue
-- Import orders from orders.csv and queue everything for printing
+- Import orders from @orders.csv and queue everything for printing
 - Print 10 benchys in PLA Basic Purple
 - Copy the color and size options from the Widget SKU to the Gadget SKU
 - Which printers are printing right now and what are they working on?

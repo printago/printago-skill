@@ -6,7 +6,7 @@
 
 ## Schema Introspection (No Auth Required)
 
-When you need detailed field information beyond what's in TYPES.md, use the schema script to get full JSON schemas.
+When you need detailed field information beyond what's in SKILL.md, use the schema script to get full JSON schemas.
 
 ### When to use schema introspection
 - You need to know all available fields for filtering/sorting
