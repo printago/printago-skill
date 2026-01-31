@@ -1,0 +1,24 @@
+{
+  "name": "printago",
+  "description": "Claude Code Skill for interacting with the Printago 3D printing management API. Manage parts, printers, print jobs, materials, SKUs, builds, orders, and profiles.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Printago",
+    "url": "https://printago.io"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/printago/printago-skill"
+  },
+  "homepage": "https://printago.io",
+  "license": "MIT",
+  "keywords": [
+    "claude-skill",
+    "claude-code",
+    "printago",
+    "3d-printing",
+    "print-farm",
+    "api",
+    "automation"
+  ]
+}
