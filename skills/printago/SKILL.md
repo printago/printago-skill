@@ -131,7 +131,9 @@ A print task in the queue.
 - `status`: pending | assigned | slicing | printing | paused | completed | failed | cancelled
 - `priority`: 100 (normal) | 1000 (low)
 - `queueOrder` (int, lower = earlier), `quantityIndex`, `quantityTotal`
-- `assignedPrinterId` (FK → Printer), `thumbnailUri`, `hidden` (bool)
+- `assignedPrinterId` (FK → Printer), `assignmentStartedAt`, `assignmentCompletedAt`
+- `printingStartedAt`, `printingCompletedAt`, `cancelledAt`
+- `thumbnailUri`, `hidden` (bool)
 
 ### SKU
 Product definition linked to parts. Supports variant options for customization.
