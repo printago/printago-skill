@@ -109,10 +109,8 @@ if [[ "$UPLOAD_URL" == "null" || -z "$UPLOAD_URL" ]]; then
   exit 1
 fi
 
-# Step 2: Upload file
-HTTP_CODE=$(curl -sS -X PUT "$UPLOAD_URL" \
-  -H "Content-Type: application/octet-stream" \
-  --data-binary "@$FILE" \
+# Step 2: Upload file (use -T to avoid Content-Type header mismatch with signed URL)
+HTTP_CODE=$(curl -sS -T "$FILE" "$UPLOAD_URL" \
   -w "%{http_code}" \
   -o /dev/null)
 
