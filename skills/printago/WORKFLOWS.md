@@ -100,11 +100,11 @@ api.sh GET /v1/parts
 api.sh POST /v1/parts/create-skus '[{"partId":"<id>","skuName":"Product Name"}]'
 ```
 
-### Print Orders (Reconcile)
+### Print Orders
 
-**Use `/v1/orders/reconcile` to create print jobs for orders.** This is the correct way to print orders - do NOT manually create builds for order items.
+**Use `/v1/orders/print` to create print jobs for orders.** This is the correct way to print orders - do NOT manually create builds for order items.
 
-Reconcile automatically:
+This automatically:
 - Matches order items to SKUs (by `externalSku` field)
 - Creates the correct number of print jobs based on quantity
 - Handles SKU variants and options
@@ -120,14 +120,14 @@ api.sh GET "/v1/orders/<orderId>/items"
 # Or get all order items:
 api.sh GET "/v1/orders/items"
 
-# 3. Reconcile to create print jobs (pass SKU IDs that need printing)
-api.sh POST /v1/orders/reconcile '{"skuIds":["<skuId1>","<skuId2>"]}'
+# 3. Call to create print jobs (pass SKU IDs that need printing)
+api.sh POST /v1/orders/print '{"skuIds":["<skuId1>","<skuId2>"]}'
 
-# Or reconcile specific orders only:
-api.sh POST /v1/orders/reconcile '{"skuIds":["<skuId>"],"orderIds":["<orderId>"]}'
+# Or specific orders only:
+api.sh POST /v1/orders/print '{"skuIds":["<skuId>"],"orderIds":["<orderId>"]}'
 
 # With priority and printer tags:
-api.sh POST /v1/orders/reconcile '{
+api.sh POST /v1/orders/print '{
   "skuIds":["<skuId>"],
   "priority":"high",
   "position":"front",
@@ -160,7 +160,7 @@ Key fields on OrderItem:
 - `externalSku` - SKU identifier from external system (used for matching)
 - `quantity` - Number ordered
 - `processedStatus` - `unprocessed` | `processed`
-- `ignored` - boolean, if true the item is skipped during reconcile
+- `ignored` - boolean, if true the item is skipped when printing orders
 
 ### Control a Printer
 ```bash

@@ -163,7 +163,7 @@ Customer order.
 ### OrderItem
 Line item in an order.
 - `orderId` (FK → Order), `skuId` (FK → SKU), `quantity`
-- `externalSku` (used to match SKU during reconcile)
+- `externalSku` (used to match SKU when printing orders)
 - `processedStatus`: unprocessed | processed
 - `ignored` (bool), `processedAt` (date)
 - **Referenced by**: PrintJob.orderItemId
@@ -202,7 +202,7 @@ SKU ──1:N──> LinkedPart ──N:1──> Part
 
 Order ──1:N──> OrderItem ──N:1──> SKU
                   │
-                  └──> PrintJob(s) via /v1/orders/reconcile
+                  └──> PrintJob(s) via /v1/orders/print
 ```
 
 ## Additional Resources

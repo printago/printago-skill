@@ -96,7 +96,7 @@ POST   /orders [body] - Create a new order
 POST   /orders/{orderId}/items [body] - Add items to an order
 POST   /orders/customers [body] - Create a new customer
 POST   /orders/ignored-skus/check [body] - Check if SKUs are ignored
-POST   /orders/print-orders [body] - Print/cancel orders to reflect current order state
+POST   /orders/print [body] - Print/cancel orders to reflect current order state
 PUT    /orders/{orderId} [body] - Update an order
 PUT    /orders/items/{itemId} [body] - Update an order item
 PATCH  /orders/{orderId}/items/batch [body] - Batch update order items
