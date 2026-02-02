@@ -201,8 +201,8 @@ Request to queue parts for printing.
 SKU ──1:N──> LinkedPart ──N:1──> Part
 
 Order ──1:N──> OrderItem ──N:1──> SKU
-                  │
-                  └──> PrintJob(s) via /v1/orders/print
+  │
+  └──> PrintJob(s) via /v1/orders/print - pass in skuIds to print (and optionally orderIds)
 ```
 
 ## Additional Resources
