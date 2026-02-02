@@ -83,8 +83,8 @@ if [[ ! -f "$FILE" ]]; then
   exit 1
 fi
 
-# Get credentials
-CRED_SOURCE=$(get_credentials) || {
+# Get credentials - call function directly (not in subshell) so exports persist
+get_credentials > /dev/null || {
   echo "Error: No credentials found" >&2
   echo "Run api.sh --help for setup instructions" >&2
   exit 1
