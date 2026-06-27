@@ -1,212 +1,180 @@
 ---
 name: printago
-description: Interact with the Printago 3D printing management API. Use for parts, printers, print jobs, materials, SKUs, builds, orders, or profiles. Make HTTP requests directly using curl.
+description: >-
+  Operate a Printago 3D print farm through the printago CLI (379 API
+  endpoints). Use when the user wants to list, inspect, or mutate printers,
+  print jobs, orders, parts, materials, SKUs, profiles, builds, maintenance,
+  API keys, or integrations (Shopify/Etsy/eBay/TikTok) against their live
+  Printago store. Commands: printago <group> <action>.
 ---
 
-# Printago API
+# Printago CLI
 
-REST API for 3D print farm management. Default: `https://api.printago.io`
+Operate a Printago print farm via the `printago` command, a zero-dependency
+client wrapping the entire Printago REST API.
 
-Set `PRINTAGO_API_URL` to target different environments:
-```bash
-export PRINTAGO_API_URL=http://localhost:3001  # Local dev
-export PRINTAGO_API_URL=https://api.printago.io # Production (default)
-```
-
-## Making API Requests
-
-**Scripts:** `scripts/` (relative to this skill directory)
-
-| Script | Purpose |
-|--------|---------|
-| `api.sh` / `api.ps1` | API requests with auth |
-| `upload.sh` / `upload.ps1` | Upload file, returns path |
-| `schema.sh` / `schema.ps1` | Fetch type/path schemas (no auth) |
-
-**Bash (macOS/Linux/WSL):**
-```bash
-api.sh GET /v1/parts
-api.sh POST /v1/parts '{"name":"Test","type":"stl",...}'
-upload.sh model.stl
-schema.sh types Part
-```
-
-**PowerShell (Windows):**
-```powershell
-./api.ps1 GET /v1/parts
-./api.ps1 POST /v1/parts '{"name":"Test","type":"stl",...}'
-./upload.ps1 model.stl
-./schema.ps1 types Part
-```
-
-## Authentication
-
-Credentials are loaded from (in order):
-1. Environment variables: `PRINTAGO_API_KEY`, `PRINTAGO_STORE_ID`
-2. System keychain (recommended for security)
-
-**Store in keychain:**
+This skill drives the `printago` CLI. If `printago` is not found, install it
+(it requires Node.js 18+):
 
 ```bash
-# macOS
-security add-generic-password -s "Printago" -a "apiKey" -w "your-api-key"
-security add-generic-password -s "Printago" -a "storeId" -w "your-store-id"
-
-# Linux (requires libsecret)
-secret-tool store --label="Printago API Key" service Printago key apiKey
-secret-tool store --label="Printago Store ID" service Printago key storeId
+brew install printago/tap/printago    # macOS / Linux
+npm install -g @printago/cli          # any platform
 ```
 
-```powershell
-# Windows
-cmdkey /generic:Printago_apiKey /user:apiKey /pass:your-api-key
-cmdkey /generic:Printago_storeId /user:storeId /pass:your-store-id
-```
+When piped (non-TTY), every command returns a single-line JSON envelope, so you
+can parse stdout directly:
+`{ ok, command, method, path, status, meta?, result, next_actions? }`.
+Errors are `{ ok:false, error:{message,code,status}, fix, details }`.
 
-## Query Parameters (GET list endpoints)
+## Credentials — do NOT ask the user to paste their API key into chat
 
-| Param | Example | Description |
-|-------|---------|-------------|
-| `{field}.{op}` | `name.contains=benchy` | Filter by field (see operators) |
-| `sort` | `sort=createdAt:desc` | Sort (field:asc or field:desc) |
-| `limit` | `limit=10` | Limit results |
-| `fields` | `fields=id,name,createdAt` | Select fields |
-| `include` | `include=parts,materials` | Include relations |
-
-### Filter Operators
-
-- **String**: `eq`, `ne`, `contains`, `startsWith`, `endsWith`
-- **Number/Date**: `gt`, `gte`, `lt`, `lte`, `between`
-- **Array**: `in`, `notIn` (e.g., `status.in=active,pending`)
-- **Null**: `isNull` (e.g., `deletedAt.isNull=true`)
-
-Multiple filters use AND: `?name.contains=test&status.eq=active`
-
-## File Uploads & Part Creation
+Check auth first:
 
 ```bash
-# Step 1: Upload file (returns path)
-upload.sh model.stl
-# → prints: uploads/abc123/model.stl
-
-# Step 2: Create part with the path
-api.sh POST /v1/parts '{"name":"My Model","description":"","type":"stl","fileUris":["uploads/abc123/model.stl"],"parameters":[],"printTags":{},"overriddenProcessProfileId":null}'
-
-# Step 3 (optional): Queue for printing
-api.sh POST /v2/builds '{"parts":[{"partId":"<id>","quantity":1}]}'
+printago auth status
 ```
 
-**Notes:**
-- `type`: stl | 3mf | gcode3mf | gcode | step | scad
-- `description` and `overriddenProcessProfileId` are required fields
-
-## Data Types
-
-All entities have: `id` (cuid2), `storeId`, `createdAt`, `updatedAt`
-
-> For complete field lists with exact types, use `schema.sh types {TypeName}`
-
-### Part
-3D model file for printing.
-- `name`, `description`, `folderId` (FK → Folder)
-- `type`: scad | stl | step | 3mf | gcode3mf | gcode
-- `fileUris[]`, `fileHashes[]`, `thumbnailUri`
-- `printTags` (object for printer matching), `userTags[]` (user labels)
-- `materials[]` ({index, color, type}), `slicingEstimate` ({estimatedPrintTimeSeconds, totalWeightGrams})
-- **Referenced by**: LinkedPart.partId, PrintJob.partId
-
-### Printer
-Physical 3D printer.
-- `name`, `deviceId`, `nozzleDiameter`, `tags[]`
-- `provider`: Bambu | Klipper | OctoPrint | Prusa
-- `enabled` (bool), `confirmedReady` (bool), `continuousPrint` (bool)
-- `isOnline` (bool), `isAvailable` (bool)
-- `printingJobId` (FK → PrintJob, current job)
-- **Referenced by**: PrintJob.assignedPrinterId
-
-### PrintJob
-A print task in the queue.
-- `partId` (FK → Part), `partName`, `skuId` (FK → SKU), `skuName`, `label`
-- `orderId` (FK → Order), `orderItemId` (FK → OrderItem), `linkedPartId` (FK → LinkedPart)
-- `status`: pending | assigned | slicing | printing | paused | completed | failed | cancelled
-- `priority`: 100 (normal) | 1000 (low)
-- `queueOrder` (int, lower = earlier), `quantityIndex`, `quantityTotal`
-- `assignedPrinterId` (FK → Printer), `assignmentStartedAt`, `assignmentCompletedAt`
-- `printingStartedAt`, `printingCompletedAt`, `cancelledAt`
-- `thumbnailUri`, `hidden` (bool)
-
-### SKU
-Product definition linked to parts. Supports variant options for customization.
-- `sku` (identifier string), `title`, `description`, `folderId` (FK → Folder)
-- `externalId`, `externalProvider`: shopify | etsy
-- `totalCogs` (number, cost of goods sold)
-- **Referenced by**: LinkedPart.skuId, OrderItem.skuId
-
-### LinkedPart
-Links a Part to a SKU with quantity and configuration.
-- `skuId` (FK → SKU), `partId` (FK → Part)
-- `quantity` (number), `label` (string)
-- `parameters[]` (PartParameterOverride[])
-- `materialAssignments` (Record<number, LinkedPartMaterialSpecification[]>)
-- `parameterBindings` (Record<string, string>, maps parameter names to SkuOptionProperty IDs)
-- **Referenced by**: PrintJob.linkedPartId
-
-### Order
-Customer order.
-- `orderNumber`, `customerId` (FK → Customer), `note`
-- `status`: open | closed
-- `source`: manual | shopify | etsy
-- `externalId`, `externalUrl`, `integrationId` (FK → Integration)
-- `deadline`, `processedAt`, `cancelledAt` (dates)
-- **Referenced by**: OrderItem.orderId, PrintJob.orderId
-
-### OrderItem
-Line item in an order.
-- `orderId` (FK → Order), `skuId` (FK → SKU), `quantity`
-- `externalSku` (used to match SKU when printing orders)
-- `processedStatus`: unprocessed | processed
-- `ignored` (bool), `processedAt` (date)
-- **Referenced by**: PrintJob.orderItemId
-
-### Customer
-- `name`, `email`, `phone`
-- `countryCode`, `provinceCode`, `zipCode`
-- `externalId`, `source`
-
-### Material
-Filament type (e.g., PLA, PETG).
-- `name`, `brand`, `type` (string like "PLA", "PETG", "ABS")
-- `identifier` (8-char code), `tags[]`
-- `starred` (bool), `pricePer1000g` (number)
-- **Referenced by**: MaterialVariant.materialId
-
-### MaterialVariant
-Specific color variant of a material.
-- `materialId` (FK → Material), `name`, `tags[]`
-- `color` (hex with alpha, e.g. #FF0000FF)
-
-### Profile
-Slicer profile for print settings.
-- `name`, `type`: process | filament | machine
-- `source`: manual | bambu-account
-
-### Build (POST /v2/builds)
-Request to queue parts for printing.
-- `parts[]`: {partId, quantity, tags, priority, position, materialAssignments}
-- `skus[]`: {skuId, quantity, tags, priority, position, selectedOptions}
-
-## Entity Relationships
+If `authenticated` is false, the key must be set **without exposing it in the
+conversation**. Ask the user to run this themselves with the `!` prefix so the
+key never enters the transcript:
 
 ```
-SKU ──1:N──> LinkedPart ──N:1──> Part
-
-Order ──1:N──> OrderItem ──N:1──> SKU
-  │
-  └──> PrintJob(s) via /v1/orders/print - pass in skuIds to print (and optionally orderIds)
+!printago auth login
 ```
 
-## Additional Resources
+(interactive: prompts for store id + a hidden API key, saved to
+`~/.config/printago/credentials.json`, mode 0600). Alternatively they can export
+`PRINTAGO_API_KEY` / `PRINTAGO_STORE_ID`. Never echo, log, cat, or pass the key
+as a visible CLI argument.
 
-- [SKU-VARIANTS.md](SKU-VARIANTS.md) - SKU variant/customization system
-- [WORKFLOWS.md](WORKFLOWS.md) - Common workflows, printing orders, API hints
-- [ENDPOINTS.md](ENDPOINTS.md) - Full endpoint list
+## Discovering commands
+
+The CLI is self-documenting — don't guess command names, list them:
+
+```bash
+printago                 # all 38 command groups
+printago printers        # commands in a group
+printago printers get --help   # method, path, and full request-body fields
+printago parts create --help   # shows every body field, type, and which are required
+```
+
+`--help` resolves the request-body schema and lists its fields (name, type,
+`*`=required). **You almost never need to read the API source or OpenAPI spec to
+construct a body — run `--help` first.** For nested object/array field types
+(e.g. `EmbeddedPartMaterialAssignments`), get the full JSON schema with
+`printago hints schema-types-get <TypeName>`.
+
+Common groups: `printers`, `print-jobs`, `orders`, `order-items`, `parts`,
+`materials`, `material-variants`, `skus`, `sku-variants`, `profiles`,
+`part-builds`, `maintenance`, `api-keys`, `subscriptions`, `folders`,
+`shopify`, `etsy`, `e-bay`, `tik-tok`.
+
+Naming convention: `list`, `get <id>`, `create`, `update <id>`, `delete <id>`,
+`search`, plus action-named subcommands (`printers snapshot <id>`,
+`print-jobs cancel`, `print-jobs retry`, `orders cancel <orderId>`).
+
+## Discover available actions (hints)
+
+The API self-describes the meaningful actions for each object type. The CLI
+surfaces them so you can find the right command for a goal without scanning all
+379 endpoints. **No credentials needed** (hints are public).
+
+```bash
+printago hints                 # which objects have hints + their CLI group
+printago hints printer         # actions for an object, each mapped to a command
+printago hints print-jobs
+printago printers list --hints # attach hints to a normal response
+printago hints schema-types-get Printer   # JSON schema for a data type
+```
+
+## Reading data
+
+List and search endpoints return a `{ data, meta }` envelope (the CLI sends
+`meta=true` by default), so you get `meta.total` / `meta.count` / `hasMore` for
+pagination. `result` is the rows. Opt out with `--no-meta`.
+
+```bash
+printago printers list --limit 10
+printago orders list --all          # auto-paginate every page
+printago print-jobs get <jobId>
+```
+
+### Filtering (important)
+
+Filter on the **`list`** command, not `search`. Pass `--filter` as
+`{field:{op:value}}` JSON, or `-q field.op=value` directly:
+
+```bash
+printago print-jobs list --filter '{"status":{"eq":"printing"}}'
+printago print-jobs list -q status.eq=printing
+printago print-jobs list -q status.in=printing,paused
+printago parts list -q name.contains=bracket --limit 20
+```
+
+Operators: `eq, ne, gt, gte, lt, lte, contains, startsWith, endsWith, in, notIn,
+isNull, between`. Multiple `-q` conditions AND together.
+
+⚠️ **Do NOT filter via `search`.** The API currently ignores a `filter` sent in
+the POST `/search` body and returns *everything*; the CLI prints a `warning`
+field when you do this. Logical `and`/`or`/`not` filters aren't expressible as
+list query params yet (the CLI errors clearly instead of returning all rows).
+
+## Mutating data
+
+Bodies come from `--data` (inline JSON, `@file.json`, or `-` for stdin). Run the
+command with `--help` first — it lists every body field and which are required.
+
+```bash
+printago parts create --data @part.json
+printago printers update <id> --data '{"name":"Printer 2"}'
+printago print-jobs cancel --data '{"printJobIds":["<jobId>"]}'
+```
+
+Mutations hit the user's live store. For destructive actions (`delete`,
+`delete-many`, `orders batch-delete`, cancel/clear queues) confirm with the user
+before running.
+
+## Uploading files
+
+File upload is a signed-URL handshake then a raw PUT of the bytes. The `upload`
+command does both and prints the `fileUri` to hand to `parts create`:
+
+```bash
+printago upload model.3mf
+# -> { "fileUris": ["uploads:<store>/<id>/model.3mf"], ... }
+```
+
+## Common workflow: upload a file and queue it for printing
+
+There is no `print-jobs create`; jobs are spawned by a build. The chain is
+upload → part → build. When unsure of a body shape, run the command with
+`--help`, or `printago hints <entity>` (it encodes this chain).
+
+```bash
+# 1. upload the model, capture the returned fileUri
+printago upload model.3mf
+
+# 2. create a part referencing it (see `parts create --help` for all fields)
+printago parts create --data '{"name":"My Model","type":"3mf","fileUris":["<fileUri>"]}'
+
+# 3. preview, then queue a build (POST /v2/builds lives in `printing`)
+printago printing preview --data '{"parts":[{"partId":"<partId>"}]}'
+printago printing create  --data '{"parts":[{"partId":"<partId>"}]}'
+
+# 4. let the matcher assign it, or pin a job to a printer
+printago print-jobs queue-run
+printago print-jobs send-to-printer <jobId> --data '{"printerId":"<printerId>"}'
+```
+
+### Diagnose the queue
+```bash
+printago print-jobs list -q status.eq=printing
+printago print-jobs matching-troubleshoot <jobId>   # why isn't it matching a printer?
+printago printers snapshot <printerId>               # live camera snapshot
+```
+
+### Point at local dev instead of prod
+```bash
+!printago auth set-base-url http://localhost:3001
+# or per-call: printago printers list --base-url http://localhost:3001
+```

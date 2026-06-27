@@ -1,117 +1,53 @@
 # Printago Skill for Claude Code
 
-A Claude Code plugin for interacting with the [Printago](https://printago.io) 3D print farm automation platform. Manage parts, printers, print jobs, SKUs, orders, and more directly from Claude.
+A Claude Code plugin that lets Claude operate your [Printago](https://printago.io) 3D print farm through the `printago` CLI. Ask in plain language and Claude manages printers, print jobs, orders, parts, materials, SKUs, builds, and more.
+
+## Requirements
+
+This skill drives the [Printago CLI](https://docs.printago.io/docs/api/cli). Install it first (it needs Node.js 18+):
+
+```bash
+brew install printago/tap/printago    # macOS / Linux
+npm install -g @printago/cli          # any platform
+```
+
+Then authenticate once (your API key is entered hidden and stored locally):
+
+```bash
+printago auth login
+```
 
 ## Installation
 
-### Via Plugin System (Recommended)
+### Plugin marketplace (recommended)
 
-Install via Claude Code's plugin system for automatic updates and team distribution:
-
-```bash
+```
 /plugin marketplace add printago/printago-skill
 /plugin install printago-skill@printago-skill
 ```
 
-Verify installation by running `/help` to confirm the skill is available.
+### With the CLI
 
-### Manual Installation
-
-Clone this repo and load it as a plugin:
+If you have the CLI installed, it can install the same skill into your personal skills:
 
 ```bash
-git clone https://github.com/printago/printago-skill.git
-claude --plugin-dir ./printago-skill
+printago skill install
 ```
 
-Or extract `skills/printago/` to `~/.claude/skills/` for standalone use.
-
-## Setup
-
-### 1. Get API Credentials
-
-1. Log in to [Printago](https://app.printago.io)
-2. Go to Addons > API Access
-3. Create a new API key and note your Store ID
-
-### 2. Store Credentials
-
-Credentials are loaded from environment variables or system keychain.
-
-**Option A: System Keychain (Recommended)**
-
-```bash
-# macOS
-security add-generic-password -s "Printago" -a "apiKey" -w "your-api-key"
-security add-generic-password -s "Printago" -a "storeId" -w "your-store-id"
-
-# Linux
-secret-tool store --label="Printago API Key" service Printago key apiKey
-secret-tool store --label="Printago Store ID" service Printago key storeId
-```
-
-```powershell
-# Windows
-cmdkey /generic:Printago_apiKey /user:apiKey /pass:your-api-key
-cmdkey /generic:Printago_storeId /user:storeId /pass:your-store-id
-```
-
-**Option B: Environment Variables**
-
-```bash
-export PRINTAGO_API_KEY=your-api-key
-export PRINTAGO_STORE_ID=your-store-id
-```
+Start a new Claude Code session (or run `/reload-plugins`) to pick it up.
 
 ## Usage
 
-Once installed, Claude will automatically use the Printago skill when relevant. You can also invoke it directly:
+Ask Claude in plain language:
 
-```
-/printago
-```
+- "Show me which printers are idle."
+- "Requeue the failed jobs from order 1234."
+- "Upload model.3mf and queue it for printing."
 
-### Example Prompts
+Claude runs the `printago` commands and reads the structured JSON results. The skill teaches it the command conventions, how to handle your credentials safely, and the common multi-step workflows.
 
-- Upload benchy.stl, name it 'Tugboat', create a SKU with 2 copies, and print it in PLA Basic Blue
-- Import orders from @orders.csv and queue everything for printing
-- Print 10 benchys in PLA Basic Purple
-- Copy the color and size options from the Widget SKU to the Gadget SKU
-- Which printers are printing right now and what are they working on?
-- What do I need to print for my open orders?
-- Cancel all pending jobs for the BENCHY SKU
+## Learn more
 
-### Scripts
-
-The skill includes helper scripts for common operations:
-
-| Script | Purpose |
-|--------|---------|
-| `api.sh` / `api.ps1` | Make authenticated API requests |
-| `upload.sh` / `upload.ps1` | Upload files to storage |
-| `schema.sh` / `schema.ps1` | Fetch API schemas (no auth) |
-
-```bash
-# Examples
-api.sh GET /v1/parts
-api.sh POST /v2/builds '{"parts":[{"partId":"abc","quantity":1}]}'
-upload.sh model.stl
-schema.sh types Part
-```
-
-## Documentation
-
-- [SKILL.md](skills/printago/SKILL.md) - Quick reference
-- [TYPES.md](skills/printago/TYPES.md) - Entity definitions
-- [SKU-VARIANTS.md](skills/printago/SKU-VARIANTS.md) - SKU variant system
-- [WORKFLOWS.md](skills/printago/WORKFLOWS.md) - Common workflows
-
-## Requirements
-
-- Claude Code v1.0.33+
-- `curl` and `jq` (for bash scripts)
-- Node.js not required
-
-## License
-
-MIT
+- [CLI documentation](https://docs.printago.io/docs/api/cli)
+- [AI Agents & Skills](https://docs.printago.io/docs/api/ai-agents)
+- [Printago API](https://developers.printago.io)
