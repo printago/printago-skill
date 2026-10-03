@@ -12,7 +12,7 @@
     {
       "name": "printago-skill",
       "source": "./",
-      "description": "Claude Code Skill for interacting with the Printago 3D printing management API. Manage parts, printers, print jobs, materials, SKUs, builds, orders, and profiles.",
+      "description": "Automate your 3D print farm with Printago. Claude manages your jobs, printers, files, orders, and more.",
       "version": "2.0.0",
       "author": {
         "name": "Printago"
